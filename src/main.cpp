@@ -1,22 +1,29 @@
 #include <Arduino.h>
+#include <Wire.h>
+#include "OledHandler.hpp"
 
-#include "oled/oled.h"
+// NTP server
+const char *ntpServer = "pool.ntp.org";
 
-Oled myOled;
+// object
+OledHandler oled;
 
 void setup()
 {
-  myOled.init();
+  oled.begin();
+  oled.clear();
+
+  oled.setCursor(0,0);
+  oled.print_text(WHITE, 1, "Testing OLED");
 }
 
 void loop()
 {
-
 }
 
-// //----------------------------------------------------Program Oled-----------------------------------------------
-// // Library Oled Display
-// #include <Wire.h>
+//----------------------------------------------------Program Oled-----------------------------------------------
+// Library Oled Display
+// // #include <Wire.h>
 // #include <Adafruit_GFX.h>
 // #include <Adafruit_SSD1306.h>
 // //Pin Oled
