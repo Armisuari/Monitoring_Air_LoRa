@@ -1,24 +1,76 @@
 #include <Arduino.h>
 #include <Wire.h>
+
 #include "OledHandler.hpp"
+#include "LoraHandler.hpp"
 
 // NTP server
 const char *ntpServer = "pool.ntp.org";
 
 // object
 OledHandler oled;
+LoraHandler lora;
 
-void setup()
-{
-  oled.begin();
-  oled.clear();
+void sendata_lora(void *pv);
+void displayHandler(void *pv);
 
-  oled.setCursor(0,0);
-  oled.print_text(WHITE, 1, "Testing OLED");
+unsigned int jarak;
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  if (lora.begin() && oled.begin()) {
+    Serial.println("LoRa dan Oled aktif");
+
+    oled.clear();
+    oled.setCursor(0, 0);
+    oled.print_text(WHITE, 1, "LoRa aktif");
+
+    xTaskCreate(displayHandler, "displayTask", 1024 * 5, NULL, 1, NULL);
+    xTaskCreate(sendata_lora, "LoRaTask", 1024 * 10, NULL, 1, NULL);
+
+  } else {
+    Serial.println("Gagal mendeteksi Oled dan LoRa...");
+  }  
 }
 
 void loop()
 {
+  vTaskDelete(NULL);
+}
+
+void displayHandler(void *pv)
+{
+  for (;;)
+  {
+    oled.clear();
+    oled.setCursor(28,0);
+    oled.print_text(WHITE, 1, "TRANSMITTER");
+
+    oled.setCursor(0,20);
+    oled.print_text(WHITE, 1, "Mengirim data .....");
+
+    oled.setCursor(0,35);
+    oled.print_text(WHITE, 1, "Ketinggian Air: ");
+    
+    oled.setCursor(0,50);
+    oled.print_text(WHITE, 1, jarak);
+
+    oled.setCursor(19,50);
+    oled.print_text(WHITE, 1, " cm");
+
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+  }
+}
+
+void sendata_lora(void *pv)
+{
+  while (true)
+  {
+    lora.lora_send(jarak);
+    vTaskDelay(500);
+  }
 }
 
 //----------------------------------------------------Program Oled-----------------------------------------------
@@ -28,7 +80,7 @@ void loop()
 // #include <Adafruit_SSD1306.h>
 // //Pin Oled
 // #define OLED_SDA 4
-// #define OLED_SCL 15 
+// #define OLED_SCL 15
 // #define OLED_RST 16
 // #define SCREEN_WIDTH 128 // Lebar Tampilan Oled, dalam satuan pixels
 // #define SCREEN_HEIGHT 64 // Tinggi Tampilan Oled, dalam satuan pixels
@@ -49,7 +101,7 @@ void loop()
 //     Serial.println(F("Gagal Mengakses SSD1306"));
 //     for(;;);    // Terus looping selama Oled gagal diakses
 //   }
-  
+
 //   display.clearDisplay();
 //   display.setTextColor(WHITE);
 //   display.setTextSize(1);
@@ -60,7 +112,7 @@ void loop()
 // }
 
 // void loop() {
-  
+
 //   display.clearDisplay();
 //   display.setCursor(28,0);
 //   display.println("TRANSIMITTER");
@@ -72,14 +124,10 @@ void loop()
 //   display.setCursor(0,50);
 //   display.println(" ");
 //   display.setCursor(20,50);
-//   display.print("cm");           
+//   display.print("cm");
 //   display.display();
 //   delay(500);
 // }
-
-
-
-
 
 // //----------------------------------------------------Program Lora-----------------------------------------------
 // // Library LoRa
@@ -98,24 +146,24 @@ void loop()
 // #define BAND 433E6
 
 // void setup() {
-  
+
 //   Serial.begin(115200);
 //   // Pin SPI
 //   SPI.begin(SCK, MISO, MOSI, SS);
 //   // Setup Modul Lora
 //   LoRa.setPins(SS, RST, DIO0);
-  
+
 //   if (!LoRa.begin(BAND)) {
 //     Serial.println("Gagal Memulai Lora!");
 //     while (1);
 //   }
-  
+
 //   Serial.println("Berhasil Menjalankan Lora");
 //   delay(2000);
 // }
 
 // void loop() {
-   
+
 //   int jarak;
 
 //   // Menampilkan Pembacaan data di serial monitor
@@ -133,10 +181,6 @@ void loop()
 //   jarak++;
 //   delay(500);
 // }
-
-
-
-
 
 // //----------------------------------------------------Program Ultrasonic-----------------------------------------------
 // // Inisialisasi Pin trig dan echo
@@ -168,10 +212,6 @@ void loop()
 //   Serial.println(" cm");
 //   delay(100);
 // }
-
-
-
-
 
 // //----------------------------------------------------Program Transmitter-----------------------------------------------
 
@@ -208,15 +248,14 @@ void loop()
 // #include <Adafruit_SSD1306.h>
 // //Pin Oled
 // #define OLED_SDA 4
-// #define OLED_SCL 15 
+// #define OLED_SCL 15
 // #define OLED_RST 16
 // #define SCREEN_WIDTH 128 // Lebar Tampilan Oled, dalam satuan pixels
 // #define SCREEN_HEIGHT 64 // Tinggi Tampilan Oled, dalam satuan pixels
 // Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 
-
 // void setup() {
-  
+
 //   Serial.begin(115200);
 
 //   // Reset Oled Menggunakan Program
@@ -231,21 +270,21 @@ void loop()
 //     Serial.println(F("Gagal Mengakses SSD1306"));
 //     for(;;);    // Terus looping selama Oled gagal diakses
 //   }
-  
+
 //   display.clearDisplay();
 //   display.setTextColor(WHITE);
 //   display.setTextSize(1);
 //   display.setCursor(0,0);
 //   display.print("Transimitter");
 //   display.display();
-  
+
 //   Serial.println("Pengujian Transmitter");
 
 //   // Pin Lora SPI
 //   SPI.begin(SCK, MISO, MOSI, SS);
 //   // Setup Modul Lora
 //   LoRa.setPins(SS, RST, DIO0);
-  
+
 //   if (!LoRa.begin(BAND)) {
 //     Serial.println("Gagal Memulai Lora!");
 //     while (1);
@@ -266,7 +305,7 @@ void loop()
 // }
 
 // void loop() {
-   
+
 //   // Proses pembacaan data sensor ultrasonic
 //   digitalWrite(trig, LOW);
 //   delayMicroseconds(5);
@@ -276,7 +315,7 @@ void loop()
 
 //   durasi = pulseIn(echo, HIGH);
 //   jarak = durasi * 0.034 / 2;
-  
+
 //   // Menampilkan Pembacaan data di serial monitor
 //   Serial.println();
 //   Serial.println("Mengirim Data : ");
@@ -289,7 +328,7 @@ void loop()
 //   LoRa.beginPacket();
 //   LoRa.print(jarak);
 //   LoRa.endPacket();
-  
+
 //   display.clearDisplay();
 //   display.setCursor(28,0);
 //   display.println("TRANSIMITTER");
@@ -301,14 +340,14 @@ void loop()
 //   display.setCursor(0,50);
 //   display.println(jarak);
 //   display.setCursor(20,50);
-//   display.print("cm");           
+//   display.print("cm");
 //   display.display();
 
 //   if (jarak > 50){
 //     Serial.println("Banjir");
 //     digitalWrite(selenoid, HIGH);
 //   }
-  
+
 //   else{
 //     digitalWrite(selenoid, LOW);
 //   }
@@ -316,10 +355,6 @@ void loop()
 //   delay(500);
 
 // }
-
-
-
-
 
 // //----------------------------------------------------Program Receiver-----------------------------------------------
 
@@ -346,7 +381,7 @@ void loop()
 
 // // Pin Oled
 // #define OLED_SDA 4
-// #define OLED_SCL 15 
+// #define OLED_SCL 15
 // #define OLED_RST 16
 // #define SCREEN_WIDTH 128 // Lebar Tampilan Oled, dalam satuan pixels
 // #define SCREEN_HEIGHT 64 // Tinggi Tampilan Oled, dalam satuan pixels
@@ -356,15 +391,15 @@ void loop()
 // // Inisialisasi varibel penampung data dari transmitter
 // String LoRaData;
 
-// void setup() { 
+// void setup() {
 //   Serial.begin(115200);
-  
+
 //   // Reset Oled Menggunakan Program
 //   pinMode(OLED_RST, OUTPUT);
 //   digitalWrite(OLED_RST, LOW);
 //   delay(20);
 //   digitalWrite(OLED_RST, HIGH);
-  
+
 //   // Inisialisasi Oled
 //   Wire.begin(OLED_SDA, OLED_SCL);
 //   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3c, false, false)) { // Alamat 0x3C untuk 128x32
@@ -380,10 +415,10 @@ void loop()
 //   display.display();
 
 //   Serial.println("Pengujian Receiver");
-  
+
 //   // Pin lora SPI
 //   SPI.begin(SCK, MISO, MOSI, SS);
-//   // Setup Modul Lora Transceiver 
+//   // Setup Modul Lora Transceiver
 //   LoRa.setPins(SS, RST, DIO0);
 
 //   if (!LoRa.begin(BAND)) {
@@ -393,7 +428,7 @@ void loop()
 //   Serial.println("Berhasil Menjalankan Lora");
 //   display.setCursor(0,10);
 //   display.println("Berhasil Menjalankan Lora");
-//   display.display();  
+//   display.display();
 // }
 
 // void loop() {
@@ -422,7 +457,7 @@ void loop()
 //   display.setCursor(0,50);
 //   display.println(LoRaData);
 //   display.setCursor(20,50);
-//   display.print("cm");           
+//   display.print("cm");
 //   display.display();
 //   }
 
