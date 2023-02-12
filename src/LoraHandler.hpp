@@ -22,7 +22,7 @@ public:
     bool begin();
 
     // Send data over LoRa network
-    void lora_send(unsigned int &);
+    void lora_send(String);
     String lora_rec();
 };
 
@@ -41,11 +41,11 @@ bool LoraHandler::begin()
     return true;
 }
 
-void LoraHandler::lora_send(unsigned int &n)
+void LoraHandler::lora_send(String n)
 {
     if (LoRa.beginPacket())
     {                     // Check to make sure the packet was started successfully before writing data
-        LoRa.write(n);    // Write the data to the packet
+        LoRa.print(n);    // Write the data to the packet
         LoRa.endPacket(); // End and send the packet
     }
     else

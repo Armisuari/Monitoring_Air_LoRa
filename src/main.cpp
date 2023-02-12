@@ -5,7 +5,7 @@
 #include "OledHandler.hpp"
 #include "LoraHandler.hpp"
 
-#define RECEIVER // uncomment this if the task as TRANSMITTER
+// #define RECEIVER // uncomment this if the task as TRANSMITTER
 
 // NTP server
 const char *ntpServer = "pool.ntp.org";
@@ -52,6 +52,18 @@ void loop()
   vTaskDelete(NULL);
 }
 
+String get_time()
+{
+  time_t epoch_time = time(NULL);
+  struct tm *time_info = localtime(&epoch_time);
+
+  char buffer[80];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", time_info);
+  std::string str(buffer);
+
+  return str.c_str();
+}
+
 void get_distance(void *pv)
 {
   while (true)
@@ -86,11 +98,14 @@ void lora_manager(void *pv)
 {
   while (true)
   {
-    #ifndef RECEIVER
-    lora.lora_send(jarak);
-    #else
+#ifndef RECEIVER
+    String payload;
+    payload = get_time() + " " + String(jarak);
+
+    lora.lora_send(payload);
+#else
     lora.lora_rec();
-    #endif
+#endif
     vTaskDelay(500);
   }
 }
