@@ -5,6 +5,8 @@
 #include "OledHandler.hpp"
 #include "LoraHandler.hpp"
 
+#define RECEIVER // uncomment this if the task as TRANSMITTER
+
 // NTP server
 const char *ntpServer = "pool.ntp.org";
 
@@ -13,7 +15,7 @@ PingHandler ping(12, 13);
 OledHandler oled;
 LoraHandler lora;
 
-void sendata_lora(void *pv);
+void lora_manager(void *pv);
 void displayHandler(void *pv);
 void get_distance(void *pv);
 
@@ -37,7 +39,7 @@ void setup()
 
     xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 15, NULL);      // Create display task with stack size of 5KB and priority of 1
     xTaskCreate(displayHandler, "displayTask", 1024 * 10, NULL, 10, NULL); // Create display task with stack size of 5KB and priority of 1
-    xTaskCreate(sendata_lora, "LoRaTask", 1024 * 10, NULL, 1, NULL);       // Create LoRa task with stack size of 10KB and priority of 1
+    xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 1, NULL);       // Create LoRa task with stack size of 10KB and priority of 1
   }
   else
   {
@@ -80,11 +82,15 @@ void displayHandler(void *pv)
   }
 }
 
-void sendata_lora(void *pv)
+void lora_manager(void *pv)
 {
   while (true)
   {
+    #ifndef RECEIVER
     lora.lora_send(jarak);
+    #else
+    lora.lora_rec();
+    #endif
     vTaskDelay(500);
   }
 }
