@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#include "PingHandler.hpp"
 #include "OledHandler.hpp"
 #include "LoraHandler.hpp"
 
@@ -8,31 +9,40 @@
 const char *ntpServer = "pool.ntp.org";
 
 // object
+PingHandler ping(12, 13);
 OledHandler oled;
 LoraHandler lora;
 
 void sendata_lora(void *pv);
 void displayHandler(void *pv);
+void get_distance(void *pv);
 
 unsigned int jarak;
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   delay(1000);
 
-  if (lora.begin() && oled.begin()) {
+  // NTP time sync
+  configTime(0, 0, ntpServer);
+
+  if (lora.begin() && oled.begin())
+  {
     Serial.println("LoRa dan Oled aktif");
 
     oled.clear();
     oled.setCursor(0, 0);
     oled.print_text(WHITE, 1, "LoRa aktif");
 
-    xTaskCreate(displayHandler, "displayTask", 1024 * 5, NULL, 1, NULL);
-    xTaskCreate(sendata_lora, "LoRaTask", 1024 * 10, NULL, 1, NULL);
-
-  } else {
+    xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 15, NULL);      // Create display task with stack size of 5KB and priority of 1
+    xTaskCreate(displayHandler, "displayTask", 1024 * 10, NULL, 10, NULL); // Create display task with stack size of 5KB and priority of 1
+    xTaskCreate(sendata_lora, "LoRaTask", 1024 * 10, NULL, 1, NULL);       // Create LoRa task with stack size of 10KB and priority of 1
+  }
+  else
+  {
     Serial.println("Gagal mendeteksi Oled dan LoRa...");
-  }  
+  }
 }
 
 void loop()
@@ -40,25 +50,31 @@ void loop()
   vTaskDelete(NULL);
 }
 
+void get_distance(void *pv)
+{
+  while (true)
+  {
+    jarak = ping.getDistance();
+    vTaskDelay(500);
+  }
+}
+
 void displayHandler(void *pv)
 {
   for (;;)
   {
     oled.clear();
-    oled.setCursor(28,0);
+    oled.setCursor(28, 0);
     oled.print_text(WHITE, 1, "TRANSMITTER");
 
-    oled.setCursor(0,20);
-    oled.print_text(WHITE, 1, "Mengirim data .....");
+    oled.setCursor(0, 20);
+    oled.print_text(WHITE, 1, "Sending data .....");
 
-    oled.setCursor(0,35);
-    oled.print_text(WHITE, 1, "Ketinggian Air: ");
-    
-    oled.setCursor(0,50);
-    oled.print_text(WHITE, 1, jarak);
+    oled.setCursor(0, 35);
+    oled.print_text(WHITE, 1, "Water Level: ");
 
-    oled.setCursor(19,50);
-    oled.print_text(WHITE, 1, " cm");
+    oled.setCursor(0, 50);
+    oled.print_text(WHITE, 1, jarak + " cm");
 
     vTaskDelay(500 / portTICK_PERIOD_MS);
   }
