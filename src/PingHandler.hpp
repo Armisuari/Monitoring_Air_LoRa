@@ -8,7 +8,7 @@ public:
 
 private:
     uint8_t _trig, _echo;
-    unsigned long duration;
+    unsigned long duration, pembacaan;
     void triggerSensor(); // new private method added to trigger the sensor
 };
 
@@ -28,10 +28,10 @@ void PingHandler::triggerSensor()
 {
 
     digitalWrite(_trig, LOW); // set the trigger pin low for 5 microseconds
-    delayMicroseconds(5);
+    delayMicroseconds(2);
 
     digitalWrite(_trig, HIGH); // set the trigger pin high for 10 microseconds
-    delayMicroseconds(10);
+    delayMicroseconds(20);
 
     digitalWrite(_trig, LOW); // set the trigger pin low again
 }
@@ -42,6 +42,8 @@ uint32_t PingHandler::getDistance()
     triggerSensor(); // call private method to trigger sensor before taking measurement.
 
     duration = pulseIn(_echo, HIGH); // measure duration of return pulse from sensor.
+    float pembacaan = duration * 0.034 / 2;
+    float jarak = (pembacaan + 0.6035) / 0.9639;
 
-    return duration * 0.034 / 2; // calculate distance from duration and return it.
+    return 82 - jarak; // calculate distance from duration and return it.
 }

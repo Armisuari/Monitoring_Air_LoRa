@@ -12,7 +12,7 @@
 const char *ntpServer = "pool.ntp.org";
 
 // // object
-PingHandler ping(13, 12); //trig, echo
+PingHandler ping(13, 12); // trig, echo
 OledHandler oled;
 LoraHandler lora;
 // // FuzzyHandler fuzzy();
@@ -93,10 +93,18 @@ void displayHandler(void *pv)
   {
     oled.clear();
     oled.setCursor(28, 0);
+
+#ifndef RECEIVER
     oled.print_text(WHITE, 1, "TRANSMITTER");
 
     oled.setCursor(0, 20);
     oled.print_text(WHITE, 1, "Sending data .....");
+#else
+    oled.print_text(WHITE, 1, "RECEIVER");
+
+    oled.setCursor(0, 20);
+    oled.print_text(WHITE, 1, "Receiving data .....");
+#endif
 
     oled.setCursor(0, 35);
     oled.print_text(WHITE, 1, "Water Level: ");
