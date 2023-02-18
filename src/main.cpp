@@ -4,6 +4,7 @@
 #include "PingHandler.hpp"
 #include "OledHandler.hpp"
 #include "LoraHandler.hpp"
+// #include "FuzzyHandler.hpp"
 
 // #define RECEIVER // uncomment this if the task as TRANSMITTER
 
@@ -14,6 +15,7 @@ const char *ntpServer = "pool.ntp.org";
 PingHandler ping(12, 13);
 OledHandler oled;
 LoraHandler lora;
+// FuzzyHandler fuzzy();
 
 void lora_manager(void *pv);
 void displayHandler(void *pv);
@@ -104,7 +106,25 @@ void lora_manager(void *pv)
 
     lora.lora_send(payload);
 #else
-    lora.lora_rec();
+
+    String rec_data = lora.lora_rec();
+    int count = 0;
+    String substrings[10];
+
+    for (int i = 0; i < rec_data.length(); i++)
+    {
+      if (rec_data[i] == ' ')
+      {
+        count++;
+      }
+      else
+      {
+        substrings[count] += rec_data[i];
+      }
+    }
+    Serial.println("received data: " + substrings[1]); // Print the second substring of the received data
+    unsigned int rec_val = substrings[1].toInt();      // Convert the second substring of the received data to an integer
+
 #endif
     vTaskDelay(500);
   }
