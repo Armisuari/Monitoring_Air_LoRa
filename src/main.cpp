@@ -31,6 +31,9 @@ void setup()
   // NTP time sync
   configTime(0, 0, ntpServer);
 
+  lora.begin();
+  oled.begin();
+
   if (lora.begin() && oled.begin())
   {
     Serial.println("LoRa dan Oled aktif");
