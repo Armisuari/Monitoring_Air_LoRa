@@ -39,13 +39,17 @@ void setup()
     oled.setCursor(0, 0);
     oled.print_text(WHITE, 1, "LoRa aktif");
 
-    xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 15, NULL);      // Create display task with stack size of 5KB and priority of 1
-    xTaskCreate(displayHandler, "displayTask", 1024 * 10, NULL, 10, NULL); // Create display task with stack size of 5KB and priority of 1
-    xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 1, NULL);       // Create LoRa task with stack size of 10KB and priority of 1
+    // xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 15, NULL);      // Create display task with stack size of 5KB and priority of 1
+    // xTaskCreate(displayHandler, "displayTask", 1024 * 10, NULL, 10, NULL); // Create display task with stack size of 5KB and priority of 1
+    // xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 1, NULL);       // Create LoRa task with stack size of 10KB and priority of 1
   }
   else
   {
     Serial.println("Gagal mendeteksi Oled dan LoRa...");
+
+    oled.clear();
+    oled.setCursor(0, 0);
+    oled.print_text(WHITE, 1, "Gagal mendeteksi LoRa");
   }
 }
 
