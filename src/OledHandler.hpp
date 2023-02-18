@@ -11,8 +11,8 @@
 #define SCREEN_WIDTH 128 // Lebar Tampilan Oled, dalam satuan pixels
 #define SCREEN_HEIGHT 64 // Tinggi Tampilan Oled, dalam satuan pixels
 
-Adafruit_SSD1306 *display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
-// Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
+// Adafruit_SSD1306 *display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 
 class OledHandler
 {
@@ -36,7 +36,7 @@ bool OledHandler::begin()
 {
     Wire.begin(OLED_SDA, OLED_SCL);
 
-    if (!display->begin(SSD1306_SWITCHCAPVCC, 0x3c, false, false))
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3c, false, false))
     {
         Serial.println("Failed to access SSD1306");
         return false;
@@ -47,27 +47,27 @@ bool OledHandler::begin()
 
 void OledHandler::clear()
 {
-    display->clearDisplay();
-    display->setCursor(0, 0); // Set the cursor to the top left corner of the screen
+    display.clearDisplay();
+    display.setCursor(0, 0); // Set the cursor to the top left corner of the screen
 }
 
 void OledHandler::setCursor(int8_t x, int8_t y)
 {
-    display->setCursor(x, y);
+    display.setCursor(x, y);
 }
 
 void OledHandler::print_text(uint16_t color, uint8_t size, const char *text)
 {
-    display->setTextColor(color);
-    display->setTextSize(size);
-    display->print(text);
-    display->display();
+    display.setTextColor(color);
+    display.setTextSize(size);
+    display.print(text);
+    display.display();
 }
 
 void OledHandler::print_text(uint16_t color, uint8_t size, unsigned int &text)
 {
-    display->setTextColor(color);
-    display->setTextSize(size);
-    display->print(text);
-    display->display();
+    display.setTextColor(color);
+    display.setTextSize(size);
+    display.print(text);
+    display.display();
 }
