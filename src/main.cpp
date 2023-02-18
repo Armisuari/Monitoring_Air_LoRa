@@ -13,12 +13,12 @@ const char *ntpServer = "pool.ntp.org";
 
 // object
 PingHandler ping(12, 13);
-OledHandler oled;
+// OledHandler oled;
 LoraHandler lora;
 // FuzzyHandler fuzzy();
 
 void lora_manager(void *pv);
-void displayHandler(void *pv);
+// void displayHandler(void *pv);
 void get_distance(void *pv);
 
 unsigned int jarak;
@@ -31,12 +31,29 @@ void setup()
   // NTP time sync
   configTime(0, 0, ntpServer);
 
-  lora.begin();
-  oled.begin();
+  // Inisialisasi Oled
+  Wire.begin(OLED_SDA, OLED_SCL);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3c, false, false))
+  { // Alamat 0x3C untuk Oled Ukuran 128x32
+    Serial.println(F("Gagal Mengakses SSD1306"));
+    for (;;)
+      ; // Terus looping selama Oled gagal diakses
+  }
 
-  oled.clear();
-  oled.setCursor(0, 0);
-  oled.print_text(WHITE, 1, "OLED TEST...");
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.print("Testing Oled");
+  display.display();
+  Serial.println("Pengujian Oled");
+
+  // lora.begin();
+  // oled.begin();
+
+  // oled.clear();
+  // oled.setCursor(0, 0);
+  // oled.print_text(WHITE, 1, "OLED TEST...");
 
   // if (lora.begin() && oled.begin())
   // {
@@ -86,26 +103,26 @@ void get_distance(void *pv)
   }
 }
 
-void displayHandler(void *pv)
-{
-  for (;;)
-  {
-    oled.clear();
-    oled.setCursor(28, 0);
-    oled.print_text(WHITE, 1, "TRANSMITTER");
+// void displayHandler(void *pv)
+// {
+//   for (;;)
+//   {
+//     oled.clear();
+//     oled.setCursor(28, 0);
+//     oled.print_text(WHITE, 1, "TRANSMITTER");
 
-    oled.setCursor(0, 20);
-    oled.print_text(WHITE, 1, "Sending data .....");
+//     oled.setCursor(0, 20);
+//     oled.print_text(WHITE, 1, "Sending data .....");
 
-    oled.setCursor(0, 35);
-    oled.print_text(WHITE, 1, "Water Level: ");
+//     oled.setCursor(0, 35);
+//     oled.print_text(WHITE, 1, "Water Level: ");
 
-    oled.setCursor(0, 50);
-    oled.print_text(WHITE, 1, jarak + " cm");
+//     oled.setCursor(0, 50);
+//     oled.print_text(WHITE, 1, jarak + " cm");
 
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-  }
-}
+//     vTaskDelay(500 / portTICK_PERIOD_MS);
+//   }
+// }
 
 void lora_manager(void *pv)
 {
