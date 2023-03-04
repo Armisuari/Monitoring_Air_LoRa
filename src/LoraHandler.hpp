@@ -11,7 +11,7 @@
 #define RST 14
 #define DIO0 26
 // Define frequency for LoRa module, either 433E6 for Asia, 866E6 for Europe, or 915E6 for America. Can also be adjusted to match the frequency of the LoRa module used.
-const uint32_t BAND = 433E6;
+const uint32_t BAND = 866E6;
 
 // Class to handle communication with the LoRa module
 class LoraHandler
@@ -23,7 +23,7 @@ public:
 
     // Send data over LoRa network
     void lora_send(String);
-    String lora_rec();
+    void lora_rec();
 };
 
 bool LoraHandler::begin()
@@ -45,6 +45,7 @@ void LoraHandler::lora_send(String n)
 {
     if (LoRa.beginPacket())
     {                     // Check to make sure the packet was started successfully before writing data
+        Serial.printf("Sending: %s cm\n", n);
         LoRa.print(n);    // Write the data to the packet
         LoRa.endPacket(); // End and send the packet
     }
@@ -54,23 +55,19 @@ void LoraHandler::lora_send(String n)
     }
 }
 
-String LoraHandler::lora_rec()
-{
-    if (LoRa.parsePacket())
-    {
-        Serial.print("Menerima data ...");
+// String LoraHandler::lora_rec()
+// {
+//     if (LoRa.parsePacket())
+//     {
+//         Serial.println("Menerima data ...");
 
-        String data = "";
+//         String data = "";
 
-        while (LoRa.available())
-        {
-            data += (char)LoRa.read();
-        }
+//         while (LoRa.available())
+//         {
+//             data = LoRa.readString();
+//         }
 
-        return data;
-    }
-    else
-    {
-        return "";
-    }
-}
+//         return data;
+//     }
+// }

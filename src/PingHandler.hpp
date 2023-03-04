@@ -42,8 +42,8 @@ uint32_t PingHandler::getDistance()
     triggerSensor(); // call private method to trigger sensor before taking measurement.
 
     duration = pulseIn(_echo, HIGH); // measure duration of return pulse from sensor.
-    float pembacaan = duration * 0.034 / 2;
-    float jarak = (pembacaan + 0.6035) / 0.9639;
+    uint32_t pembacaan = duration * 0.034 / 2;
+    uint32_t jarak = (pembacaan + 0.6035) / 0.9639;
 
-    return 82 - jarak; // calculate distance from duration and return it.
+    return 81 - jarak; // calculate distance from duration and return it.
 }

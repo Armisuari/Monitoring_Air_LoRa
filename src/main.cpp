@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <WiFi.h>
 
 #include "PingHandler.hpp"
 #include "OledHandler.hpp"
@@ -7,6 +8,9 @@
 // #include "FuzzyHandler.hpp"
 
 // #define RECEIVER // uncomment this if the task as TRANSMITTER
+
+const char *ssid = "Raspberrypi";
+const char *password = "1122334455";
 
 // NTP server
 const char *ntpServer = "pool.ntp.org";
@@ -21,20 +25,28 @@ void lora_manager(void *pv);
 void displayHandler(void *pv);
 void get_distance(void *pv);
 
+unsigned int jarak;
+String jarak_;
+
 void setup()
 {
   Serial.begin(115200);
   // delay(1000);
 
+  // Connect to Wi-Fi network
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+
+  // Print IP address
+  Serial.print("Connected to Wi-Fi network with IP address: ");
+  Serial.println(WiFi.localIP());
+
   // NTP time sync
   configTime(0, 0, ntpServer);
-
-  // lora.begin();
-  // oled.begin();
-
-  // oled.clear();
-  // oled.setCursor(0, 0);
-  // oled.print_text(WHITE, 1, "OLED TEST...");
 
   if (lora.begin() && oled.begin())
   {
@@ -43,10 +55,14 @@ void setup()
     oled.clear();
     oled.setCursor(0, 0);
     oled.print_text(WHITE, 1, "LoRa aktif");
+    delay(3000);
+    oled.clear();
 
-    xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 10, NULL);      // Create display task with stack size of 5KB and priority of 1
-    xTaskCreate(displayHandler, "displayTask", 1024 * 10, NULL, 10, NULL); // Create display task with stack size of 5KB and priority of 1
-    // xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 1, NULL);       // Create LoRa task with stack size of 10KB and priority of 1
+#ifndef RECEIVER
+    xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 1, NULL); // Create display task with stack size of 5KB and priority of 1
+#endif
+    xTaskCreate(displayHandler, "displayTask", 1024 * 10, NULL, 1, NULL); // Create display task with stack size of 5KB and priority of 1
+    xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 10, NULL);      // Create LoRa task with stack size of 10KB and priority of 1
   }
   else
   {
@@ -57,41 +73,65 @@ void setup()
     oled.print_text(WHITE, 1, "Gagal mendeteksi LoRa");
   }
 }
+// String jarak;
 
-unsigned int jarak{0};
+void LoraHandler::lora_rec()
+{
+  if (LoRa.parsePacket())
+  {
+    // Paket  data di terima
+    Serial.println("Menerima Data ...");
+
+    // Membaca paket data
+    while (LoRa.available())
+    {
+      jarak = LoRa.readString().toInt();
+    }
+  }
+}
 
 void loop()
 {
+  // lora.lora_rec();
+  // Serial.printf("data: %d cm\n", jarak);
+  // delay(500);
   vTaskDelete(NULL);
 }
 
-// String get_time()
-// {
-//   time_t epoch_time = time(NULL);
-//   struct tm *time_info = localtime(&epoch_time);
+String get_time()
+{
+  time_t epoch_time = time(NULL) + 28800;
+  struct tm *time_info = gmtime(&epoch_time);
 
-//   char buffer[80];
-//   strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", time_info);
-//   std::string str(buffer);
+  char buffer[80];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", time_info);
+  std::string str(buffer);
 
-//   return str.c_str();
-// }
+  return str.c_str();
+}
 
 void get_distance(void *pv)
 {
   while (true)
   {
     jarak = ping.getDistance();
-    Serial.printf("Distance: %d cm\n", jarak);
+    // Serial.printf("Distance: %d cm\n", jarak);
     vTaskDelay(500);
   }
 }
+
+unsigned int jarak_prev{0};
 
 void displayHandler(void *pv)
 {
   for (;;)
   {
-    oled.clear();
+    if (jarak_prev != jarak)
+    {
+      jarak_prev = jarak;
+      oled.clear();
+    }
+
     oled.setCursor(28, 0);
 
 #ifndef RECEIVER
@@ -109,44 +149,51 @@ void displayHandler(void *pv)
     oled.setCursor(0, 35);
     oled.print_text(WHITE, 1, "Water Level: ");
 
-    oled.setCursor(0, 50);
-    oled.print_text(WHITE, 1, jarak + " cm");
+    oled.setCursor(78, 35);
+    oled.print_text(WHITE, 1, jarak);
+
+    oled.setCursor(85, 35);
+    oled.print_text(WHITE, 1, " CM");
 
     vTaskDelay(500 / portTICK_PERIOD_MS);
-    // vTaskDelay(500);
+    // vTaskDelay(50  0);
   }
 }
 
-// void lora_manager(void *pv)
-// {
-//   while (true)
-//   {
-// #ifndef RECEIVER
-//     String payload;
-//     payload = get_time() + " " + String(jarak);
+void lora_manager(void *pv)
+{
+  while (true)
+  {
+#ifndef RECEIVER
+    String payload;
+    payload = String(jarak);
+    Serial.println(payload + " cm");
 
-//     lora.lora_send(payload);
-// #else
+    lora.lora_send(payload);
+#else
 
-//     String rec_data = lora.lora_rec();
-//     int count = 0;
-//     String substrings[10];
+    lora.lora_rec();
+    String payload = get_time() + " distance: " + jarak + " cm";
+    Serial.println(payload);
 
-//     for (int i = 0; i < rec_data.length(); i++)
-//     {
-//       if (rec_data[i] == ' ')
-//       {
-//         count++;
-//       }
-//       else
-//       {
-//         substrings[count] += rec_data[i];
-//       }
-//     }
-//     Serial.println("received data: " + substrings[1]); // Print the second substring of the received data
-//     unsigned int rec_val = substrings[1].toInt();      // Convert the second substring of the received data to an integer
+    // int count = 0;
+    // String substrings[10];
 
-// #endif
-//     vTaskDelay(500);
-//   }
-// }
+    // for (int i = 0; i < rec_data.length(); i++)
+    // {
+    //   if (rec_data[i] == ' ')
+    //   {
+    //     count++;
+    //   }
+    //   else
+    //   {
+    //     substrings[count] += rec_data[i];
+    //   }
+    // }
+    // Serial.println("received data: " + substrings[1]); // Print the second substring of the received data
+    // unsigned int rec_val = substrings[1].toInt();      // Convert the second substring of the received data to an integer
+
+#endif
+    vTaskDelay(500);
+  }
+}

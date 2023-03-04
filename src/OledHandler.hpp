@@ -11,14 +11,14 @@
 #define SCREEN_WIDTH 128 // Lebar Tampilan Oled, dalam satuan pixels
 #define SCREEN_HEIGHT 64 // Tinggi Tampilan Oled, dalam satuan pixels
 
-Adafruit_SSD1306 *display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
+// Adafruit_SSD1306 *display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 // Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 
 class OledHandler
 {
 
-    // private:
-    //     Adafruit_SSD1306 *display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
+private:
+    Adafruit_SSD1306 *display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 
 public:
     bool begin();
