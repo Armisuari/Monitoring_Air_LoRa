@@ -5,9 +5,8 @@
 #include "PingHandler.hpp"
 #include "OledHandler.hpp"
 #include "LoraHandler.hpp"
-// #include "FuzzyHandler.hpp"
 
-// #define RECEIVER // uncomment this if the task as TRANSMITTER
+#define RECEIVER // uncomment this if the task as TRANSMITTER
 
 const char *ssid = "Raspberrypi";
 const char *password = "1122334455";
@@ -19,7 +18,6 @@ const char *ntpServer = "pool.ntp.org";
 PingHandler ping(13, 12); // trig, echo
 OledHandler oled;
 LoraHandler lora;
-// // FuzzyHandler fuzzy();
 
 void lora_manager(void *pv);
 void displayHandler(void *pv);
@@ -27,6 +25,8 @@ void get_distance(void *pv);
 
 unsigned int jarak;
 String jarak_;
+
+unsigned int rec_val;
 
 void setup()
 {
@@ -62,7 +62,7 @@ void setup()
     xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 1, NULL); // Create display task with stack size of 5KB and priority of 1
 #endif
     xTaskCreate(displayHandler, "displayTask", 1024 * 10, NULL, 1, NULL); // Create display task with stack size of 5KB and priority of 1
-    xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 10, NULL);      // Create LoRa task with stack size of 10KB and priority of 1
+    xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 10, NULL);     // Create LoRa task with stack size of 10KB and priority of 1
   }
   else
   {
@@ -160,6 +160,8 @@ void displayHandler(void *pv)
   }
 }
 
+int convertToInt(String payload);
+
 void lora_manager(void *pv)
 {
   while (true)
@@ -176,24 +178,30 @@ void lora_manager(void *pv)
     String payload = get_time() + " distance: " + jarak + " cm";
     Serial.println(payload);
 
-    // int count = 0;
-    // String substrings[10];
-
-    // for (int i = 0; i < rec_data.length(); i++)
-    // {
-    //   if (rec_data[i] == ' ')
-    //   {
-    //     count++;
-    //   }
-    //   else
-    //   {
-    //     substrings[count] += rec_data[i];
-    //   }
-    // }
-    // Serial.println("received data: " + substrings[1]); // Print the second substring of the received data
-    // unsigned int rec_val = substrings[1].toInt();      // Convert the second substring of the received data to an integer
+    rec_val = convertToInt(payload);
 
 #endif
     vTaskDelay(500);
   }
+}
+
+int convertToInt(String payload)
+{
+  int count = 0;
+  String substrings[10];
+
+  for (int i = 0; i < payload.length(); i++)
+  {
+    if (payload[i] == ' ')
+    {
+      count++;
+    }
+    else
+    {
+      substrings[count] += payload[i];
+    }
+  }
+  Serial.println("received data: " + substrings[1]); // Print the second substring of the received data
+
+  return substrings[2].toInt(); // Convert the second substring of the received data to an integer
 }
