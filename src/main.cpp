@@ -5,6 +5,7 @@
 #include "PingHandler.hpp"
 #include "OledHandler.hpp"
 #include "LoraHandler.hpp"
+#include "FuzzyHandler.h"
 
 #define RECEIVER // uncomment this if the task as TRANSMITTER
 
@@ -22,6 +23,7 @@ LoraHandler lora;
 void lora_manager(void *pv);
 void displayHandler(void *pv);
 void get_distance(void *pv);
+void FuzzyHandler(void *pv);
 
 unsigned int jarak;
 String jarak_;
@@ -61,8 +63,11 @@ void setup()
 #ifndef RECEIVER
     xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 1, NULL); // Create display task with stack size of 5KB and priority of 1
 #endif
+    setup_fuzzy();
+
     xTaskCreate(displayHandler, "displayTask", 1024 * 10, NULL, 1, NULL); // Create display task with stack size of 5KB and priority of 1
-    xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 10, NULL);     // Create LoRa task with stack size of 10KB and priority of 1
+    xTaskCreate(lora_manager, "LoRaTask", 1024 * 10, NULL, 10, NULL);     // Create LoRa task with stack size of 10KB and priority of 10
+    xTaskCreate(FuzzyHandler, "FuzzyTask", 1024 * 10, NULL, 15, NULL);     // Create Fuzzy task with stack size of 10KB and priority of 15
   }
   else
   {
@@ -204,4 +209,38 @@ int convertToInt(String payload)
   Serial.println("received data: " + substrings[1]); // Print the second substring of the received data
 
   return substrings[2].toInt(); // Convert the second substring of the received data to an integer
+}
+
+void FuzzyHandler(void *pv)
+{
+  while (true)
+  {
+    int input = rec_val;
+
+    Serial.println("\n\n\nEntrance: ");
+    Serial.print("\t\t\tDistance: ");
+    Serial.println(input);
+
+    fuzzy->setInput(1, input);
+    fuzzy->fuzzify();
+
+    int output = fuzzy->defuzzify(1);
+
+    if (output <= 28)
+      Serial.printf("Result:\n\t\t\taman (%d)\n", output);
+    else if (output >= 25 && output <= 53)
+      Serial.printf("Result:\n\t\t\tsiaga (%d)\n", output);
+    else if (output >= 50 && output <= 78)
+      Serial.printf("Result:\n\t\t\tbahaya (%d)\n", output);
+    else if (output >= 75 && output <= 100)
+      Serial.printf("Result:\n\t\t\tbanjir (%d)\n", output);
+    else
+      Serial.println("Result:\n\t\t\tout of range");
+
+    // Serial.println("Result: ");
+    // Serial.print("\t\t\tServo: ");
+    // Serial.println(output);
+
+    vTaskDelay(12000);
+  }
 }
