@@ -58,7 +58,7 @@ void setup()
     oled.setCursor(0, 0);
     oled.print_text(WHITE, 1, "LoRa aktif");
     delay(3000);
-    oled.clear();
+    oled.clear(); //
 
 #ifndef RECEIVER
     xTaskCreate(get_distance, "pingTask", 1024 * 10, NULL, 1, NULL); // Create display task with stack size of 5KB and priority of 1
